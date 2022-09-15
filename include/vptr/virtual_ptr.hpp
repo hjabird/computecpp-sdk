@@ -1,5 +1,5 @@
 /***************************************************************************
- *  Copyright (C) 2017 Codeplay Software Limited
+ *  Copyright (C) Codeplay Software Limited
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
@@ -33,7 +33,11 @@
 #ifndef CL_SYCL_SDK_CODEPLAY_VIRTUAL_PTR_HPP
 #define CL_SYCL_SDK_CODEPLAY_VIRTUAL_PTR_HPP
 
+#if SYCL_LANGUAGE_VERSION < 202001
 #include <CL/sycl.hpp>
+#else
+#include <sycl/sycl.hpp>
+#endif // SYCL_LANGUAGE_VERSION < 202001
 
 #include <cstddef>
 #include <queue>
@@ -41,7 +45,9 @@
 #include <stdexcept>
 #include <map>
 
+#if SYCL_LANGUAGE_VERSION < 202001
 namespace cl {
+#endif // SYCL_LANGUAGE_VERSION < 202001
 namespace sycl {
 namespace codeplay {
 
@@ -52,7 +58,11 @@ using sycl_acc_mode = cl::sycl::access::mode;
  * Default values for template arguments
  */
 using buffer_data_type_t = uint8_t;
+#if SYCL_LANGUAGE_VERSION < 202001
 const sycl_acc_target default_acc_target = sycl_acc_target::global_buffer;
+#else
+const sycl_acc_target default_acc_target = sycl_acc_target::device;
+#endif 
 const sycl_acc_mode default_acc_mode = sycl_acc_mode::read_write;
 
 /**
@@ -418,7 +428,11 @@ class PointerMapper {
   template <class BufferT>
   virtual_pointer_t add_pointer_impl(BufferT b) {
     virtual_pointer_t retVal = nullptr;
+  #if SYCL_LANGUAGE_VERSION < 202001
     size_t bufSize = b.get_size() * sizeof(buffer_data_type_t);
+  #else
+    size_t bufSize = b.size() * sizeof(buffer_data_type_t);
+  #endif // SYCL_LANGUAGE_VERSION < 202001
     auto byte_buffer =
         b.template reinterpret<buffer_data_type_t>(cl::sycl::range<1>{bufSize});
     pMapNode_t p{byte_buffer, bufSize, false};
@@ -540,5 +554,7 @@ inline void SYCLfreeAll(PointerMapper& pMap) {
 
 }  // namespace codeplay
 }  // namespace sycl
+#if SYCL_LANGUAGE_VERSION < 202001
 }  // namespace cl
+#endif // SYCL_LANGUAGE_VERSION < 202001
 #endif  // CL_SYCL_SDK_CODEPLAY_VIRTUAL_PTR_HPP
